@@ -1,8 +1,12 @@
 # RC Bot — Project Handoff / Wrap-Up
 
 **Source:** shared Claude chat (owner: *Jalol*), summarized 2026-10-23.
-**Repo state at time of writing:** `Furqatbek/tg-bot-logistics` is **empty** — no commits, no code.
-All code so far exists **only as attachments inside that chat.**
+
+**Status update (same day):** the 7 files from that chat were lost, so the project was
+**rebuilt from scratch in this repo** — see `README.md`. This document is kept as the record
+of what was decided and why. The design below is what got built, with two differences noted
+inline: the geocoder is now a fallback chain, and the previously unfinished BOL/POD and
+driver-ETA features are implemented and tested.
 
 ---
 
@@ -13,10 +17,10 @@ The token `8384992812:AAGJ...` was pasted in plaintext into a chat that was then
 Treat it as compromised. In Telegram: `@BotFather` → `/revoke` → select the bot → get a new token.
 Put the new one only in `.env`, never in a message.
 
-**2. Download the 7 code files out of that chat.**
-The chat belongs to Jalol, not you, and the files are chat attachments — if that chat is cleared or the
-share link is revoked, the work is gone. Get `bot.py`, `db.py`, `tracking.py`, `i18n.py`,
-`requirements.txt`, `.env`, `README.md` saved locally and committed to this repo.
+**2. ~~Download the 7 code files out of that chat.~~ Done differently.**
+The files were lost before they could be recovered, so the project was rewritten from the
+design recorded here. The code now lives in this repo with a test suite. Nothing further is
+needed from Jalol's chat.
 
 ---
 
@@ -111,11 +115,10 @@ New Anthropic accounts get $5 free credit. *Verify current pricing before relyin
 
 ---
 
-## ⚠️ Unfinished — the chat cuts off mid-build
+## ✅ Was unfinished in the chat — now built and tested
 
-The last feature was being implemented when the conversation ended. Code was written across
-`bot.py`, `tracking.py`, and `i18n.py` but **the final verification step never completed and no
-final file set was delivered.** Treat this as in-progress, not done:
+The original conversation cut off mid-build on the last feature. Both parts are now
+implemented and covered by tests (`tests/test_flow.py`):
 
 - **Deadline status checks** — when the pickup window passes, bot asks the driver in-group
   "did you pick up?" and, if yes, requests the **BOL** photo. Same pattern at delivery for the **POD**.
@@ -124,8 +127,8 @@ final file set was delivered.** Treat this as in-progress, not done:
   the bot's calculations defer to the driver's ETA instead of the GPS-derived one, **and notify
   the dispatcher/updater that the ETA changed.**
 
-**First job when resuming:** get those files, run a full compile check, and verify these two
-features actually work end to end.
+Both are exercised end to end in the test suite, including the case where a pasted RC
+contains the words "provide ETA at pickup" and must *not* be read as a driver ETA.
 
 ---
 
@@ -167,5 +170,7 @@ swapped without touching group binding, scheduling, or update formatting.
 - Set real UZS pricing in `PRICING`
 - Get an Anthropic API key + credit (nothing has been tested against a live API yet — only logic simulations)
 - Decide Click vs Payme, then provision VPS + domain + Let's Encrypt for the webhook
-- Extraction accuracy has **never been tested on a real API call** — all validation so far was
-  manual simulation against two sample RCs (Jake Brake #35840, MegaCorp #2683071)
+- Extraction accuracy still has **never been tested against a real API call** — this needs an
+  API key with credit. Everything else is tested: 46 tests cover the full lifecycle with
+  Claude and Telegram stubbed, and geocoding/routing were verified live (the Jake Brake load
+  routes to 118.5 mi / $8.02 RPM, not the ~128 mi / $7.42 estimated in the chat)
