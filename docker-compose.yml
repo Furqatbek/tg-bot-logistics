@@ -1,0 +1,32 @@
+services:
+  bot:
+    build:
+      context: .
+      target: runtime
+    image: rc-bot
+    container_name: rc-bot
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Overrides whatever .env says: inside the container the database
+      # belongs on the volume, not in the working directory.
+      DB_PATH: /data/bot.db
+    volumes:
+      - bot-data:/data
+    stop_grace_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Not started by `up` — run it with: docker compose run --rm tests
+  tests:
+    build:
+      context: .
+      target: test
+    image: rc-bot-tests
+    profiles: ["test"]
+
+volumes:
+  bot-data:

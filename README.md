@@ -41,7 +41,63 @@ rate shown on 4h, with no overlap.
 
 ---
 
-## Setup
+## Running with Docker (recommended)
+
+One command, no Python install, and the bot restarts itself if it crashes or
+the machine reboots.
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(Windows/macOS) or Docker Engine (Linux). Nothing else — not even Python.
+
+```bash
+git clone --branch claude/epic-darwin-c4gwrm https://github.com/Furqatbek/tg-bot-logistics.git rc_bot
+cd rc_bot
+cp .env.example .env          # copy .env.example .env   on Windows
+```
+
+Edit `.env` and fill in `TELEGRAM_BOT_TOKEN`, `ANTHROPIC_API_KEY` and
+`ADMIN_TELEGRAM_ID` (see the table above). Then:
+
+```bash
+docker compose up -d --build
+```
+
+That's it — the bot is live.
+
+| Task | Command |
+|---|---|
+| Follow the logs | `docker compose logs -f` |
+| Stop | `docker compose down` |
+| Restart | `docker compose restart` |
+| Update to the latest code | `git pull && docker compose up -d --build` |
+| Run the test suite | `docker compose run --rm tests` |
+| Open a shell inside | `docker compose exec bot sh` |
+
+**The database lives in a named volume** (`bot-data`), not in the image, so
+active loads, group settings and credits survive rebuilds and updates. To back
+it up:
+
+```bash
+docker run --rm -v tg-bot-logistics_bot-data:/data -v "$PWD:/backup"   busybox cp /data/bot.db /backup/bot-backup.db
+```
+
+`docker compose down -v` deletes that volume along with everything in it — use
+plain `down` unless you mean to wipe state.
+
+**If the container keeps restarting**, run `docker compose logs` and read the
+last few lines. The two usual causes are a missing value in `.env` (it names
+the setting) and a rejected bot token (it says so explicitly) — `restart:
+unless-stopped` will retry a bad token forever, so check the log rather than
+waiting.
+
+Notes: the image runs as a non-root user, logs are capped at 3 × 10 MB so they
+can't fill the disk, and the `tests` service is behind a profile so
+`up` never starts it.
+
+
+---
+
+## Setup (without Docker)
 
 ### 1. Create the bot
 
@@ -53,6 +109,9 @@ In Telegram, message `@BotFather`:
   it would never receive the driver's location shares in a group.
 
 ### 2. Install
+
+Python **3.11 or newer**.
+
 
 ```bash
 git clone https://github.com/Furqatbek/tg-bot-logistics.git

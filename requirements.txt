@@ -2,3 +2,6 @@ python-telegram-bot[job-queue]>=21.6,<22
 anthropic>=1.0
 httpx2>=0.1
 python-dotenv>=1.0
+# Windows ships no system time zone database, so zoneinfo needs this.
+# Harmless on Linux/macOS, which have one.
+tzdata>=2024.1
