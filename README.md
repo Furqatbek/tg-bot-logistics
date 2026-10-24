@@ -155,6 +155,42 @@ pin messages** — otherwise it can extract and post but not pin.
 
 ---
 
+## First real test
+
+Before wiring up groups and drivers, run one RC through extraction on its own.
+This is the only part that costs money and the only part not covered by the
+test suite, so isolate it first.
+
+```bash
+# free — renders built-in sample data, makes no API call
+python try_extract.py --dry-run
+
+# the real thing: one RC, one API call, a few cents
+python try_extract.py "C:\path\to\rc.pdf"
+python try_extract.py rc.pdf --json              # also dump the raw extraction
+python try_extract.py rc.pdf --lang uz --hide-rate
+```
+
+Under Docker:
+
+```bash
+docker compose run --rm -v "$PWD:/rc" bot python try_extract.py /rc/rc.pdf
+```
+
+It prints each stage separately — what was extracted, whether each address
+geocoded, the routed mileage, and the message the bot would post — so a
+failure tells you which stage broke.
+
+**Check these on the output**, since they're where a new broker layout tends
+to go wrong: both addresses geocoded (not `None`), the mileage is plausible,
+times converted to AM/PM correctly, and anything the RC contradicts itself on
+shows up in the conflicts block rather than being silently picked.
+
+Once that looks right, start the bot and send the same PDF into a group.
+
+
+---
+
 ## Commands
 
 **In a driver's group**
